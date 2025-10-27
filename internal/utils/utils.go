@@ -18,7 +18,7 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil;
 }
 
-// generates joincode.
+// generates random joincode.
 func GenerateJoinCode() string {
 	bytes := make([]byte, 3);
 	rand.Read(bytes);

@@ -18,6 +18,6 @@ var AUTHORIZATION_HEADER string  = "Authorization";
 // redis constants
 var USER_KEY_PREFIX string = "user:email:";
 
-
 // mongo constants
 var USERS_COLLECTION string = "organizers";
+var SESSION_COLLECTION string = "session_polls";

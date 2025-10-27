@@ -49,7 +49,12 @@ services:
       - "29092:29092"
     volumes:
       - kafka_data:/var/lib/kafka/data
+    networks:
+      - kafka-net  
       
+networks:
+  redis-net:
+    driver: bridge
 
 volumes:
   redis_data:
