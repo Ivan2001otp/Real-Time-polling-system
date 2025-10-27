@@ -1,21 +1,6 @@
 version: '3.8'
 
 services:
-  app: 
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - KAFKA_BROKERS=kafka:9092
-      - REDIS_URL=redis:6379
-      - JWT_SECRET=your-secret-jwt-key
-    depends_on:
-      - redis
-      - kafka
-    volumes:
-      - .:/app
-    restart: unless-stopped
-
   redis:
     image: redis:7.2-alpine
     ports:
@@ -23,6 +8,8 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
+    networks:
+      - app-network
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -31,6 +18,8 @@ services:
       - ZOOKEEPER_TICK_TIME=2000
     ports:
       - "2181:2181"
+    networks:
+      - app-network
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
@@ -46,16 +35,17 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     ports:
+      - "9092:9092"
       - "29092:29092"
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
-      - kafka-net  
-      
-networks:
-  redis-net:
-    driver: bridge
+      - app-network
 
 volumes:
   redis_data:
   kafka_data:
+
+networks:
+  app-network:
+    driver: bridge
