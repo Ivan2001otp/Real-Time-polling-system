@@ -2,9 +2,10 @@ package main
 
 import (
 	"RealTimePoll/internal/database"
+	"RealTimePoll/internal/kafka"
+	kafkaConfig "RealTimePoll/internal/kafka"
 	"RealTimePoll/internal/routers"
 	"RealTimePoll/internal/utils"
-	kafkaConfig "RealTimePoll/internal/kafka"
 	"log"
 	"net/http"
 
@@ -41,6 +42,12 @@ func main() {
 		log.Printf("Kafka init failed: %v (continuing without Kafka)", err);
 	}	
 	defer kafkaConfig.CloseKafka();
+
+
+	go func() {
+		log.Println("Starting Kafka Consumer...");
+		kafka.StartVoteConsumer();
+	}()
 
 	// cors setup
 	corsOptions := cors.New(cors.Options{
