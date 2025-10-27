@@ -4,6 +4,7 @@ import (
 	"RealTimePoll/internal/database"
 	"RealTimePoll/internal/routers"
 	"RealTimePoll/internal/utils"
+	kafkaConfig "RealTimePoll/internal/kafka"
 	"log"
 	"net/http"
 
@@ -18,7 +19,7 @@ func setUpConfig() {
 func main() {
 	
 	mongoInstance := database.GetMongoInstance();
-	if err := mongoInstance.Init("mongodb://localhost:27017", "polling");err != nil {
+	if err := mongoInstance.Init(utils.MONGO_CONNECTION, utils.DB_NAME);err != nil {
 		log.Fatal("MongoDB init failed:", err);
 	}
 
@@ -26,18 +27,27 @@ func main() {
 
 
 	redisInstance := database.GetRedisInstance();
-	if err := redisInstance.Init("redis://localhost:6379");err != nil {
+	// "redis://localhost:6379"
+	if err := redisInstance.Init(utils.REDIS_CONNECTION);err != nil {
 		log.Fatal("Redis init failed : ",err);
 	}
 
 	defer redisInstance.Close();
+
+
+	// initialize kafka
+	kafkaBrokers := []string{"localhost:29092"} // from docker-compose is picked.
+	if err := kafkaConfig.InitKafka(kafkaBrokers); err != nil {
+		log.Printf("Kafka init failed: %v (continuing without Kafka)", err);
+	}	
+	defer kafkaConfig.CloseKafka();
 
 	// cors setup
 	corsOptions := cors.New(cors.Options{
 		AllowedMethods :[]string{"GET", "DELETE", "POST", "OPTIONS", "PUT", "PATCH"},
 		AllowCredentials : true,
 		AllowedHeaders:[]string{"Authorization", "Content-Type"},
-		
+
 	})
 
 
@@ -53,7 +63,12 @@ func main() {
 
 
 	commonRouters := mainRouter.PathPrefix("/api/v1").Subrouter();
+	coreRouters := mainRouter.PathPrefix("/api/v1").Subrouter();
+	voteRouters := mainRouter.PathPrefix("/api/v1").Subrouter();
+
 	routers.RegisterAuthRoutes(commonRouters);
+	routers.RegisterCoreRouters(coreRouters);
+	routers.RegisterVotingRouters(voteRouters);
 
 	handler := corsOptions.Handler(mainRouter);
 	
