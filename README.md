@@ -139,3 +139,51 @@ db.votes.createIndex({
 - Redis cluster for distributed caching
 - Kafka partitioning for parallel processing
 
+## Workflow
+```txt
+USER VOTES
+    ↓
+POST /api/v1/votes
+    ↓
+[VALIDATION]
+    ├─ Check session active?
+    ├─ Validate question exists?
+    └─ Basic data validation
+    ↓
+[IMMEDIATE RESPONSE]
+    └─ HTTP 202 Accepted + vote ID
+    ↓
+[ASYNC PROCESSING START]
+    ↓
+Kafka: votes.submitted topic
+    ↓
+Vote Consumer (processVoteMessage)
+    ↓
+[DEDUPLICATION]
+    ├─ Redis SETNX check
+    └─ MongoDB unique index
+    ↓
+[PERSISTENCE]
+    ├─ Save to MongoDB votes collection
+    └─ Cache vote in Redis
+    ↓
+[RESULTS CALCULATION]
+    └─ UpdateRealTimeResults()
+        ↓
+    Calculate new results
+        ↓
+    Cache in Redis
+        ↓
+    Emit Kafka: results.updated topic
+    ↓
+[REAL-TIME BROADCAST]
+    ↓
+Results Broadcaster Consumer
+    ↓
+WebSocket Hub
+    ↓
+BROADCAST TO ALL CONNECTED CLIENTS
+    ↓
+Live UI Updates for All Participants
+```
+
