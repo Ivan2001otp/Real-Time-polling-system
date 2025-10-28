@@ -2,8 +2,7 @@ package main
 
 import (
 	"RealTimePoll/internal/database"
-	"RealTimePoll/internal/kafka"
-	kafkaConfig "RealTimePoll/internal/kafka"
+	kafkaConfig "RealTimePoll/internal/kafkaImpl"
 	"RealTimePoll/internal/routers"
 	"RealTimePoll/internal/utils"
 	"log"
@@ -46,7 +45,7 @@ func main() {
 
 	go func() {
 		log.Println("Starting Kafka Consumer...");
-		kafka.StartVoteConsumer();
+		kafkaConfig.StartVoteConsumer();
 	}()
 
 	// cors setup
