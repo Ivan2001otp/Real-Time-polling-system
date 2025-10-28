@@ -30,7 +30,7 @@ func RegisterOrganizerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// check whether user exists with the provided email
 	fetchedUser, err := services.FetchOrganizerFromEmail(organizer.Email);
-	if fetchedUser == nil {
+	if fetchedUser != nil {
 		utils.ErrorResponse(w, http.StatusConflict, "User Already exists for the given email - "+organizer.Email);
 		return;
 	}

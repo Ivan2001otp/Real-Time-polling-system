@@ -47,7 +47,8 @@ func FetchOrganizerFromEmail(email string) (*models.User, error) {
 	 err = usersCollection.FindOne(ctx, map[string]string{"email":email}).Decode(&organizer);
 	 
 	 if err != nil{
-		return nil, fmt.Errorf("user not found: %v", err)
+		log.Printf("user not found: %v", err);
+		return nil, fmt.Errorf("user not found")
 	 }
 
 	 // cache the user to redis
@@ -122,5 +123,4 @@ func SaveOrganizer(user models.User) (error) {
 	
 
     return nil
-
 }

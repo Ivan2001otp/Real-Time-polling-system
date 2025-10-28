@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"log"
 	"time"
-
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -53,7 +52,6 @@ func cacheSessionInRedis(session *models.Session) error {
 
 	redisDb := database.GetRedisInstance();
 	ctx := context.Background();
-
 
 	sessionKey := SESSION_KEY_PREFIX + session.ID.Hex()
 	sessionJSON, err := json.Marshal(session)
@@ -125,6 +123,7 @@ func GetSessionsByOrganizer(organizerID primitive.ObjectID) ([]models.Session, e
 }
 
 
+
 func getSessionsFromMongoDB(organizerID primitive.ObjectID) ([]models.Session, error) {
     mongo := database.GetMongoInstance()
     sessionsCollection := mongo.GetCollection("sessions")
@@ -187,3 +186,34 @@ func UpdateSessionStatus(sessionID primitive.ObjectID, status string) error {
     return nil
 }
 
+
+
+
+
+// GetVoteCountForQuestion returns vote count for a question from Redis cache(for real time display)
+func GetVoteCountForQuestion(questionID primitive.ObjectID) (int64, error) {
+    redis := database.GetRedisInstance()
+    ctx := context.Background()
+
+    questionVotesKey := fmt.Sprintf("question_votes:%s", questionID.Hex())
+    count, err := redis.GetClient().SCard(ctx, questionVotesKey).Result()
+    if err != nil {
+        return 0, fmt.Errorf("failed to get vote count from Redis: %v", err)
+    }
+
+    return count, nil
+}
+
+// GetVotesForSession returns all vote IDs for a session from Redis(for real time display)
+func GetVotesForSession(sessionID primitive.ObjectID) ([]string, error) {
+    redis := database.GetRedisInstance()
+    ctx := context.Background()
+
+    sessionVotesKey := fmt.Sprintf("session_votes:%s", sessionID.Hex())
+    voteIDs, err := redis.GetClient().SMembers(ctx, sessionVotesKey).Result()
+    if err != nil {
+        return nil, fmt.Errorf("failed to get session votes from Redis: %v", err)
+    }
+
+    return voteIDs, nil
+}

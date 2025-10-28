@@ -39,4 +39,43 @@ type Vote struct {
 	ParticipantID primitive.ObjectID `bson:"participant_id" json:"participantId"`
 	SelectedOptions []int `bson:"selected_options" json:"selectedOptions"`
 	CreatedAt time.Time `bson:"created_at" json:"createdAt"`
+	Processed bool `bson:"processed" json:"processed"`
+	ProcessedAt time.Time `bson:"processed_at" json:"processedAt,omitempty"`
+}
+
+
+
+// important models to represent stats across every question poll result.
+type QuestionResult struct {
+	QuestionID string `json:"questionId"`
+	Text string `json:"text"`
+	Options []OptionCount `json:"options"`
+	TotalVotes int `json:"totalVotes"`
+	VotersCount int `json:"votersCount"`
+}
+
+type OptionCount struct {
+	Index int `json:"index"`
+	Text string `json:"text"`
+	Count int `json:"count"`
+	Percentage float64 `json:"percentage"`
+}
+
+type SessionResults struct {
+    SessionID    string                  `json:"sessionId"`
+    Title        string                  `json:"title"`
+    Status       string                  `json:"status"`
+    TotalVotes   int                     `json:"totalVotes"`
+    Participants int                     `json:"participants"` // Unique participants
+    Questions    map[string]QuestionResult `json:"questions"` // questionID -> results
+    LastUpdated  time.Time               `json:"lastUpdated"`
+}
+
+
+// request body to submit vote.
+type VoteRequest struct {
+    SessionID     string   `json:"sessionId"`
+    QuestionID    string   `json:"questionId"`
+    ParticipantID string   `json:"participantId"` // unique id generated from frontend
+    SelectedOptions []int  `json:"selectedOptions"`
 }

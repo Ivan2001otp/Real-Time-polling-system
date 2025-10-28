@@ -1,12 +1,14 @@
 package database
 
 import (
+	"RealTimePoll/internal/utils"
 	"context"
 	"fmt"
 	"log"
 	"sync"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -112,4 +114,17 @@ func (m *mongoDB) IsConnected() bool {
 	defer cancel();
 
 	return m.client.Ping(ctx, nil) == nil;
+}
+
+func (m *mongoDB) EstablishIndexes() {
+	voteCollection := m.GetCollection(utils.VOTES_COLLECTION);
+
+	voteCollection.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+		Keys: bson.D{
+			{Key:"session_id", Value:1},
+			{Key:"question_id", Value:1},
+			{Key:"participant_id", Value:1},
+		},
+		Options: options.Index().SetUnique(true),
+	})
 }

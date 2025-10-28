@@ -3,6 +3,7 @@ package main
 import (
 	"RealTimePoll/internal/database"
 	kafkaConfig "RealTimePoll/internal/kafkaImpl"
+	"RealTimePoll/internal/realtime"
 	"RealTimePoll/internal/routers"
 	"RealTimePoll/internal/utils"
 	"log"
@@ -43,10 +44,13 @@ func main() {
 	defer kafkaConfig.CloseKafka();
 
 
-	go func() {
-		log.Println("Starting Kafka Consumer...");
-		kafkaConfig.StartVoteConsumer();
-	}()
+	// websocket setup.
+	hub:=realtime.NewHub();
+	go hub.Run();
+
+	// start consumers
+	kafkaConfig.StartAllConsumer(hub)
+
 
 	// cors setup
 	corsOptions := cors.New(cors.Options{
@@ -67,7 +71,7 @@ func main() {
 		utils.ErrorResponse(w, http.StatusNotFound, "The API endpoint you trying to reach does not exist.Make sure you are trying out the right one.");
 	})
 
-
+	routers.RegisterWebsocketRoutes(mainRouter, hub);
 	commonRouters := mainRouter.PathPrefix("/api/v1").Subrouter();
 	coreRouters := mainRouter.PathPrefix("/api/v1").Subrouter();
 	voteRouters := mainRouter.PathPrefix("/api/v1").Subrouter();
@@ -75,6 +79,7 @@ func main() {
 	routers.RegisterAuthRoutes(commonRouters);
 	routers.RegisterCoreRouters(coreRouters);
 	routers.RegisterVotingRouters(voteRouters);
+
 
 	handler := corsOptions.Handler(mainRouter);
 	
